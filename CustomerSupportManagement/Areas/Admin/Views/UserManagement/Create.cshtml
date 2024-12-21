@@ -1,0 +1,83 @@
+﻿@model CustomerManagement.Common.Models.UserViewModel
+
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<h2>Create User</h2>
+
+<form asp-action="Create" method="post">
+    <div class="row mb-3">
+        <label asp-for="Name" class="col-sm-3 col-form-label text-end">Name</label>
+        <div class="col-sm-9">
+            @Html.TextBoxFor(model => model.Name, new { @class = "form-control", id = "userName", placeholder = "--Username--", autocomplete = "off" })
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label asp-for="PasswordHash" class="col-sm-3 col-form-label text-end">Password</label>
+        <div class="col-sm-9">
+            @Html.TextBoxFor(model => model.PasswordHash, new { @class = "form-control", id = "Password",autocomplete = "off" })
+            <span asp-validation-for="PasswordHash" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label asp-for="RoleId" class="form-label">Select Role</label>
+@*         @Html.DropDownListFor(m => m.RoleId, Model.Roles, "Select a Role", new { @class = "form-control" })
+ *@        @Html.DropDownList("RoleDropDown", Enumerable.Empty<SelectListItem>(), new { @class = "chosen-select form-control" })
+        <span asp-validation-for="RoleId" class="text-danger"></span>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-9 offset-sm-3">
+            <button type="submit" class="btn btn-primary" id="SaveData">Create</button>
+        </div>
+    </div>
+</form>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<script>
+    debugger;
+    $('#SaveData').on('click', function () {
+        debugger;
+        var request = {
+            Name: $.trim($("#userName").val()),
+            PasswordHash: $.trim($("#Password").val()),
+            RoleId: $.trim($("#RoleDropDown").val()),
+        };
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("Create", "UserManagement")',
+            data: request,
+            success: function (data) {
+                if (data.isSuccess) {
+                    invalidPractice = false;
+                    $('#EditModal').dialog('close');
+                    var showInactive = $("#showInactive").prop('checked');
+                    reloadAgGrid({
+                        url: '@Url.Action("GetAllPractices", "Practice")',
+                        data: {
+                            "showInactive": showInactive
+                        },
+
+                    }, practiceGridApi)
+                    toastr.success(data.message);
+                }
+                else {
+                    if (!data.isValid) {
+                        toastr.error(data.message);
+                    }
+                }
+            }
+        });
+    });
+
+    loadDropdown("#RoleDropDown", '@Url.Action("GetRoles", "UserManagement")', '--Select Roles--', @Model.RoleId)
+</script>
+
